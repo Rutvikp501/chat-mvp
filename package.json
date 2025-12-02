@@ -1,0 +1,22 @@
+{
+  "name": "chat-mvp",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Rutvikp501/chat-mvp#readme",
+  "bugs": {
+    "url": "https://github.com/Rutvikp501/chat-mvp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rutvikp501/chat-mvp.git"
+  },
+  "license": "ISC",
+  "author": "Rutvik Patil",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm -w -r run dev",
+    "start": "pnpm -w -r run start",
+    "build": "pnpm -w -r run build"
+  }
+}
