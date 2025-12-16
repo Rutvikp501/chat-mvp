@@ -1,12 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
+import { useCallStore } from "../store/useCallStore"; // ✅ FIXED
 import ChatHeader from "./ChatHeader";
 import NoChatHistoryPlaceholder from "./NoChatHistoryPlaceholder";
 import MessageInput from "./MessageInput";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
+import IncomingCallModal from "./call/IncomingCallModal"; // already correct
+import ActiveCallView from "./call/ActiveCallView";
+import OutgoingCallBanner from "./call/OutgoingCallBanner";
 
 function ChatContainer() {
+  const { incomingCall } = useCallStore(); // ✅ FIXED
+  const { outgoingCall } = useCallStore(); // ✅ FIXED
   const {
     selectedUser,
     getMessagesByUserId,
@@ -15,26 +21,32 @@ function ChatContainer() {
     subscribeToMessages,
     unsubscribeFromMessages,
   } = useChatStore();
+
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
+    if (!selectedUser?._id) return;
+
     getMessagesByUserId(selectedUser._id);
     subscribeToMessages();
 
-    // clean up
     return () => unsubscribeFromMessages();
   }, [selectedUser, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
-    if (messageEndRef.current) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  if (!selectedUser) return null;
 
   return (
     <>
+      {/* 📞 Incoming Call */}
+      {incomingCall && <IncomingCallModal />}
+      {outgoingCall && <OutgoingCallBanner />}
       <ChatHeader />
+  <ActiveCallView />
       <div className="flex-1 px-6 overflow-y-auto py-8">
         {messages.length > 0 && !isMessagesLoading ? (
           <div className="max-w-3xl mx-auto space-y-6">
@@ -63,7 +75,7 @@ function ChatContainer() {
                 </div>
               </div>
             ))}
-            {/* 👇 scroll target */}
+
             <div ref={messageEndRef} />
           </div>
         ) : isMessagesLoading ? (

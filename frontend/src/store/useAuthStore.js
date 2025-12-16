@@ -1,8 +1,9 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios";
+import { axiosInstance } from "../api/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-
+import { useCallStore } from "./useCallStore";
+// import { useWebRTCAudio } from "../hooks/useWebRTCCall";
 const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:3000" : "/";
 
 export const useAuthStore = create((set, get) => ({
@@ -80,25 +81,63 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  connectSocket: () => {
-    const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
+ connectSocket: () => {
+//   const {
+//   handleOffer,
+//   handleAnswer,
+//   handleCandidate,
+// } = useWebRTCAudio();
+  const { authUser } = get();
+  if (!authUser || get().socket?.connected) return;
 
-    const socket = io(BASE_URL, {
-      withCredentials: true, // this ensures cookies are sent with the connection
-    });
+const socket = io(BASE_URL, {
+  withCredentials: true,
+  transports: ["websocket", "polling"],
+  path: "/socket.io",   // 🔥 MUST BE HERE
+});
 
-    socket.connect();
 
-    set({ socket });
 
-    // listen for online users event
-    socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-    });
-  },
+  socket.connect();
+
+  set({ socket });
+  window.socket = socket;   // 🔥 GLOBAL SOCKET FIX
+
+// existing event listeners
+socket.on("getOnlineUsers", (userIds) => {
+  set({ onlineUsers: userIds });
+});
+
+// 🔔 Incoming call
+socket.on("call:incoming", (payload) => {
+  console.log("📞 Incoming call:", payload);
+  useCallStore.getState().setIncomingCall(payload);
+});
+
+// 📡 WebRTC signaling (FORWARD ONLY)
+socket.on("call:offer", (payload) => {
+  useCallStore.getState().onRemoteOffer(payload);
+});
+
+socket.on("call:answer", (payload) => {
+  useCallStore.getState().onRemoteAnswer(payload);
+});
+
+socket.on("call:candidate", (payload) => {
+  useCallStore.getState().onRemoteCandidate(payload);
+});
+
+socket.on("call:ended", () => {
+  useCallStore.getState().endCall();
+});
+
+},
+
 
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
   },
 }));
+
+
+

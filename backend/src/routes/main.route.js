@@ -3,7 +3,8 @@ const router = express.Router();
 
 import authRoutes from "./auth.route.js";
 import messageRoutes from "./message.route.js";
-
+import roomRoutes from "./rooms.route.js";
+import callRoutes from "./calls.route.js";
 
 // ✅ Basic check route (after API)
 router.get('/', (req, res) => {
@@ -11,6 +12,8 @@ router.get('/', (req, res) => {
 });
 router.use("/auth", authRoutes);
 router.use("/messages", messageRoutes);
+router.use("/rooms", roomRoutes);
+router.use("/calls", callRoutes);
 
 export default router;
 
